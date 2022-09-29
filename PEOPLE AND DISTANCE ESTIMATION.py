@@ -1,3 +1,4 @@
+# Import the required libraries
 import cv2
 import numpy as np
 import rospy  
@@ -13,6 +14,7 @@ PERSON_WIDTH = 16  # INCHES
 CONFIDENCE_THRESHOLD = 0.4
 NMS_THRESHOLD = 0.3
 
+# declare data type to be publish
 global twist
 twist = Twist()
 Direction =0
@@ -40,10 +42,11 @@ with open("classes.txt", "r") as f:
     class_names = [cname.strip() for cname in f.readlines()]
 #  setttng up opencv net
 yoloNet = cv2.dnn.readNet("yolov4-tiny.weights", "yolov4-tiny.cfg")
-
+# setting up CUDA backend
 yoloNet.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
 yoloNet.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA_FP16)
 
+# apply YOLO network in the model
 model = cv2.dnn_DetectionModel(yoloNet)
 model.setInputParams(size=(416, 416), scale=1 / 255, swapRB=True)
 
@@ -79,7 +82,7 @@ def object_detector(image):
         # returning list containing the object data.
     return data_list
 
-
+# function declaration for finding focal lenght
 def focal_length_finder(measured_distance, real_width, width_in_rf):
     focal_length = (width_in_rf * measured_distance) / real_width
 
@@ -92,6 +95,7 @@ def distance_finder(focal_length, real_object_width, width_in_frmae):
     distance = distance*0.0254
     return distance
 
+# function for publishing the twist messages based on the robot's condition
 def condition():
     
     pub = rospy.Publisher('cmd_vel', Twist, queue_size = 1)
@@ -104,6 +108,7 @@ def condition():
 # reading the reference image from dir
 ref_person = cv2.imread("ReferenceImages/image14.png")
 
+# finding width of the person in the reference image
 person_data = object_detector(ref_person)
 person_width_in_rf = person_data[0][1]
 
@@ -114,6 +119,7 @@ print(
 # finding focal length
 focal_person = focal_length_finder(KNOWN_DISTANCE, PERSON_WIDTH, person_width_in_rf)
 
+#setting up the output frame and capture the image recorded by the camera 
 cap = cv2.VideoCapture(0)
 width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 height= cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -125,14 +131,12 @@ while True:
     frame_height, frame_width, ret = frame.shape
     RightBound = frame_width-200
     Left_Bound = 200
+    # setting up the initial condition for the twist messages
     twist.linear.x = 0
     twist.linear.y = 0
     twist.angular.z = 0
     
-
-
-    
-
+    # supply the video streamed by the camera to the object detector function
     data = object_detector(frame)
     for d in data:
         if d[0] == "person":
@@ -157,8 +161,8 @@ while True:
             if body_center_x<Left_Bound:
                 print("Left Movement")
                 # Direction of movement
-                twist.linear.x = 0      #kiri z=+1
-                twist.angular.z = 4
+                twist.linear.x = 0      
+                twist.angular.z = 4        #LEFT z=+1
 
 
 
@@ -170,8 +174,8 @@ while True:
                 print("Right Movement")
                 # Direction of movement
                 
-                twist.linear.x = 0      #kanan z=-1
-                twist.angular.z = -4
+                twist.linear.x = 0      
+                twist.angular.z = -4        #RIGHT z=-1
                
                 
                 cv2.line(frame, (50,65), (170, 65), (BLACK), 15)
@@ -228,6 +232,7 @@ while True:
     condition()
     cv2.imshow("frame", frame)
     key = cv2.waitKey(1)
+    # Quit and close the output frame 
     if key == ord("q"):
         break
     
