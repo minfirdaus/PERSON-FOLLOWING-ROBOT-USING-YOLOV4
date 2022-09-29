@@ -6,7 +6,11 @@ The main file required in this project is:
 3. navbot.ino
 4. yolov4-tiny.cfg
 5. yolov4-tiny.weights
-6. .img(in ReferenceImages)
+6. image14.png (in ReferenceImages)
+
+# The Demo of this project can be seen clearly by clicking on this Youtube link:
+https://youtu.be/Z5JlozXGDvc
+
 
 
 
