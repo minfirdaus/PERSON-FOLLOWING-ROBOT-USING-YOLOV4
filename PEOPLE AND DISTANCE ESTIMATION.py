@@ -7,7 +7,7 @@ from geometry_msgs.msg import Twist
 # Distance constants
 KNOWN_DISTANCE = 45  # INCHES
 PERSON_WIDTH = 16  # INCHES
-MOBILE_WIDTH = 3.0  # INCHES
+
 
 # Object detector constant
 CONFIDENCE_THRESHOLD = 0.4
@@ -16,11 +16,7 @@ NMS_THRESHOLD = 0.3
 global twist
 twist = Twist()
 Direction =0
-# Max 0 and Min 255 Speed of Motors 
-Motor1_Speed =0 # Speed of motor Accurding to PMW values in Arduino 
-Motor2_Speed =0
-Truing_Speed =110
-net_Speed =180
+
 
 # colors for object detected
 COLORS = [
@@ -107,22 +103,17 @@ def condition():
 
 # reading the reference image from dir
 ref_person = cv2.imread("ReferenceImages/image14.png")
-ref_mobile = cv2.imread("ReferenceImages/image4.png")
-
-mobile_data = object_detector(ref_mobile)
-mobile_width_in_rf = mobile_data[1][1]
 
 person_data = object_detector(ref_person)
 person_width_in_rf = person_data[0][1]
 
 print(
-    f"Person width in pixels : {person_width_in_rf} mobile width in pixel: {mobile_width_in_rf}"
+    f"Person width in pixels : {person_width_in_rf}"
 )
 
 # finding focal length
 focal_person = focal_length_finder(KNOWN_DISTANCE, PERSON_WIDTH, person_width_in_rf)
 
-focal_mobile = focal_length_finder(KNOWN_DISTANCE, MOBILE_WIDTH, mobile_width_in_rf)
 cap = cv2.VideoCapture(0)
 width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 height= cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -164,13 +155,9 @@ while True:
 
             # Direction Decider Condition
             if body_center_x<Left_Bound:
-                # Writing The motor Speed 
-                Motor1_Speed=Truing_Speed
-                Motor2_Speed=Truing_Speed
                 print("Left Movement")
                 # Direction of movement
                 twist.linear.x = 0      #kiri z=+1
-                twist.linear.y = 0
                 twist.angular.z = 4
 
 
@@ -180,14 +167,10 @@ while True:
                 cv2.putText(frame, f"Move Left {body_center_x}", (50,70), FONTS,0.4, (YELLOW),1)
 
             elif body_center_x>RightBound:
-                # Writing The motor Speed 
-                Motor1_Speed=Truing_Speed
-                Motor2_Speed=Truing_Speed
                 print("Right Movement")
                 # Direction of movement
                 
-                twist.linear.x = 0      #kiri z=+1
-                twist.linear.y = 0
+                twist.linear.x = 0      #kanan z=-1
                 twist.angular.z = -4
                
                 
@@ -198,12 +181,8 @@ while True:
                 # cv2.putText(frame, f"Truing = False", (50,70), FONTS,0.4, (WHITE),1)
 
             elif distance >1.5 and distance<=5: #convert to m later 70=2 m  200=8m
-                # Writing The motor Speed 
-                Motor1_Speed=net_Speed
-                Motor2_Speed=net_Speed
                 # Direction of movement
                 twist.linear.x = 2
-                twist.linear.y = 0
                 twist.angular.z = 0
 
 
@@ -213,24 +192,16 @@ while True:
                 print("Move Forward")
 
             elif distance <=1:
-                # Writing The motor Speed 
-                Motor1_Speed=net_Speed
-                Motor2_Speed=net_Speed
                 # Direction of movement
                 twist.linear.x = -2
-                twist.linear.y = 0
                 twist.angular.z = 0
                 
                 print("Move Backward")
                 cv2.line(frame, (50,55), (200, 55), (BLACK), 15)
                 cv2.putText(frame, f"Backward Movement", (50,58), FONTS,0.4, (PERPEL),1)
             else:
-                # Writing The motor Speed 
-                Motor1_Speed=0
-                Motor2_Speed=0
                 # Direction of movement
                 twist.linear.x = 0
-                twist.linear.y = 0
                 twist.angular.z = 0
                 cv2.line(frame, (50,55), (200, 55), (BLACK), 15)
                 cv2.putText(frame, f"No Movement", (50,58), FONTS,0.4, (PERPEL),1)
